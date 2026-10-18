@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>DIANA – diagnostyka i analiza układów cyfrowych</title>
-    <script type="text/javascript" src="/eel.js"></script>
     <script type="text/javascript" src="examples.js"></script>
     <script type="text/javascript" src="engine.js"></script>
     <style>
@@ -710,8 +709,18 @@
         if(!ctxTarget) return;
         let id = ctxTarget;
         hideContextMenu();
-        let newId = prompt(`Podaj nową nazwę dla elementu ${id}:`, id);
-        if(newId !== null) rename(id, newId);
+        // Nazwę wpisuje się na schemacie (Enter zatwierdza, Esc anuluje) - Electron nie obsługuje okienka prompt()
+        let lbl = document.getElementById(id).querySelector('.name-lbl');
+        lbl.contentEditable = 'true';
+        lbl.focus();
+        getSelection().selectAllChildren(lbl);
+        let finish = (name) => { lbl.onkeydown = lbl.onblur = null; lbl.contentEditable = 'false'; rename(id, name); };
+        lbl.onkeydown = (e) => {
+            e.stopPropagation();
+            if(e.key === 'Enter') { e.preventDefault(); finish(lbl.innerText); }
+            if(e.key === 'Escape') finish(id);
+        };
+        lbl.onblur = () => finish(lbl.innerText);
     }
 
     function ctxDelete() {

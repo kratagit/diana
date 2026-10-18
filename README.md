@@ -2,15 +2,30 @@
 
 **DIANA** (*DIagnostyka i ANAliza układów cyfrowych*) to narzędzie edukacyjno-inżynierskie pozwalające na projektowanie układów logicznych i automatyczne generowanie wektorów testowych (ATPG) dla pojedynczych usterek typu *stuck-at* (s-a-0, s-a-1). Projekt implementuje klasyczny D-Algorytm (pobudzenie, propagacja, badanie zgodności) z wyborem alternatywnych decyzji przez użytkownika i tabelą krok po kroku.
 
-Cała aplikacja – edytor schematów i silnik D-algorytmu – jest napisana w czystym JavaScripcie (Vanilla JS / SVG). Okno aplikacji otwiera na razie mały program w Pythonie (`Eel`); docelowo zastąpi go Electron.
+Cała aplikacja – edytor schematów i silnik D-algorytmu – jest napisana w czystym JavaScripcie (Vanilla JS / SVG) i działa jako aplikacja okienkowa [Electron](https://www.electronjs.org/), także offline.
 
-Gotowy plik `.exe` dla Windows: [najnowsze wydanie](https://github.com/kratagit/diana/releases/latest).
+## 📥 Instalacja
+
+Pobierz plik dla swojego systemu z [najnowszego wydania](https://github.com/kratagit/diana/releases/latest):
+
+| System | Plik | Jak zainstalować |
+|---|---|---|
+| **Windows** (10/11, 64-bit) | `diana-<wersja>-windows-x64-setup.exe` | Uruchom instalator – DIANA zainstaluje się bez uprawnień administratora i pojawi się w menu Start i na pulpicie. Odinstalowanie: Ustawienia → Aplikacje. |
+| **macOS** (Intel i Apple Silicon) | `diana-<wersja>-macos-universal.dmg` | Otwórz plik `.dmg` i przeciągnij DIANA do folderu Aplikacje. |
+| **Linux** (64-bit) | `diana-<wersja>-linux-x64.AppImage` | Nadaj prawo wykonania (`chmod +x diana-*.AppImage`) i uruchom. |
+| **Linux** (Ubuntu, Debian) | `diana-<wersja>-linux-x64.deb` | `sudo apt install ./diana-<wersja>-linux-x64.deb` |
+
+Aplikacja nie jest podpisana certyfikatem, dlatego system może ją zablokować przy pierwszym uruchomieniu:
+
+* **Windows** – w okienku „System Windows ochronił ten komputer” kliknij **Więcej informacji → Uruchom mimo to**.
+* **macOS** – przy pierwszym uruchomieniu pojawi się komunikat, że nie można sprawdzić aplikacji. Otwórz **Ustawienia systemowe → Prywatność i ochrona** i kliknij **Otwórz mimo to** (wystarczy raz).
+* **Linux (AppImage)** – jeśli plik się nie uruchamia, doinstaluj bibliotekę FUSE (np. `sudo apt install libfuse2`) albo użyj pakietu `.deb`.
 
 ---
 
 ## 🏗️ Architektura Rozwiązania
 
-Interfejs i silnik działają w jednym oknie przeglądarki Chromium (Chrome / Edge) bez serwera obliczeniowego. Python z biblioteką `Eel` (`main.py`) tylko serwuje folder `web/` i otwiera okno.
+Interfejs i silnik działają w jednym oknie Electrona (`main.js` otwiera `web/index.html`), bez serwera obliczeniowego i bez komunikacji między procesami.
 
 ### 1. Warstwa Prezentacji (Frontend - Web UI)
 Cały interfejs działa w oparciu o silnik przeglądarki, używając natywnego HTML5, Vanilla JavaScript oraz manipulacji DOM i SVG. Zrezygnowano z ciężkich frameworków (np. React) na rzecz surowej wydajności w zarządzaniu setkami wtyczek i kabli.
@@ -36,17 +51,14 @@ Jądro aplikacji stanowi klasa `DAlgorithmEngine` (zwykły skrypt JS bez zależn
 ## 🚀 Uruchamianie, testy i budowanie
 
 ### Środowisko
-- [Node.js](https://nodejs.org/) 24 – testy i generowanie przykładów (bez instalowania pakietów).
-- Python 3.14 – tylko otwieranie okna (`Eel`) i budowanie `.exe`:
+[Node.js](https://nodejs.org/) 24, potem w katalogu projektu:
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements-dev.txt   # samo uruchamianie: requirements.txt
+npm install
 ```
 
 ### Uruchomienie ze źródeł
 ```bash
-python main.py
+npm start
 ```
 
 ### Testy
@@ -62,15 +74,14 @@ Testy działają na wbudowanym module testów Node.js (`node --test`, pliki `tes
 
 Układy do ręcznego sprawdzania w aplikacji (Plik → Wczytaj układ) wraz z kluczem odpowiedzi są w `tests/fixtures/do-sprawdzenia/`. Na GitHubie testy uruchamia workflow `CI` przy każdym pushu i pull requeście.
 
-### Budowanie `.exe` (PyInstaller)
+### Budowanie paczek
 ```bash
-python build.py               # przykłady -> testy -> dist/DIANA.exe
-python build.py --skip-tests  # bez testów
+npm run dist   # przykłady -> paczka dla bieżącego systemu w dist/
 ```
-Skrypt regeneruje `web/examples.js`, uruchamia testy i pakuje `main.py` PyInstallerem do jednego pliku bez okna konsoli (z wbudowanym folderem `web/`; pliki Eel dołącza hook PyInstallera). Budowanie trwa ok. minuty.
+Skrypt regeneruje `web/examples.js` i buduje electron-builderem paczkę dla systemu, na którym jest uruchomiony: na Windows instalator `dist/diana-0.0.0-windows-x64-setup.exe` (ok. 30 s), na macOS `.dmg`, na Linuksie `AppImage` i `.deb`. Testy uruchamia się osobno (`npm test`).
 
 ### Wydania (GitHub Releases)
-Wydanie powstaje po merge'u PR na `main` oznaczonego etykietą `patch`, `minor` lub `major`. Workflow `Release` uruchamia testy, buduje `.exe` na Windows i publikuje release z plikiem `diana-<wersja>-windows-x64.exe`. Wersja jest wyliczana automatycznie z ostatniego tagu `vX.Y.Z` (pierwsze wydanie: `v1.0.0`) i nie jest zapisana w kodzie:
+Wydanie powstaje po merge'u PR na `main` oznaczonego etykietą `patch`, `minor` lub `major`. Workflow `Release` uruchamia testy, buduje paczki na trzech maszynach GitHuba (Windows, macOS, Linux) i publikuje release z plikami z tabeli w sekcji „Instalacja”. Wersja jest wyliczana automatycznie z ostatniego tagu `vX.Y.Z` (pierwsze wydanie: `v1.0.0`) i nie jest zapisana w kodzie:
 
 | Etykieta | Kiedy | Przykład |
 |---|---|---|
@@ -83,6 +94,6 @@ PR bez etykiety nie tworzy wydania.
 ### Dodawanie wbudowanych przykładów (JSON)
 1. Zapisz schemat za pomocą „Zapisz układ”.
 2. Umieść plik jako `[NUMER].json` (np. `3.json`) w głównym katalogu projektu.
-3. Uruchom `npm run przyklady` (robi to też `build.py`) – wszystkie pliki `[NUMER].json` zostaną zaszyte w `web/examples.js`, a przyciski w menu „Plik” wygenerują się same.
+3. Uruchom `npm run przyklady` (robi to też `npm run dist`) – wszystkie pliki `[NUMER].json` zostaną zaszyte w `web/examples.js`, a przyciski w menu „Plik” wygenerują się same.
 
 ---

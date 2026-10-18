@@ -1,9 +1,32 @@
 {
   "name": "diana",
+  "productName": "DIANA",
   "private": true,
   "description": "DIANA – diagnostyka i analiza układów cyfrowych (D-algorytm)",
+  "author": "kratagit",
+  "homepage": "https://github.com/kratagit/diana",
+  "main": "main.js",
   "scripts": {
+    "start": "electron .",
     "test": "node --test tests/*.test.js",
-    "przyklady": "node buduj_przyklady.js"
+    "przyklady": "node buduj_przyklady.js",
+    "dist": "node buduj_przyklady.js && electron-builder -c.extraMetadata.version=0.0.0"
+  },
+  "devDependencies": {
+    "electron": "44.9.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.kratagit.diana",
+    "files": ["main.js", "web/**"],
+    "electronLanguages": ["pl", "en-US"],
+    "directories": { "output": "dist" },
+    "win": { "target": "nsis" },
+    "nsis": { "artifactName": "diana-${version}-windows-${arch}-setup.${ext}" },
+    "mac": { "target": "dmg", "category": "public.app-category.education", "identity": "-", "hardenedRuntime": false },
+    "dmg": { "artifactName": "diana-${version}-macos-${arch}.${ext}" },
+    "linux": { "target": ["AppImage", "deb"], "category": "Education", "maintainer": "kratagit" },
+    "appImage": { "artifactName": "diana-${version}-linux-x64.${ext}" },
+    "deb": { "artifactName": "diana-${version}-linux-x64.${ext}" }
   }
 }
