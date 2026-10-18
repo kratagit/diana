@@ -23,10 +23,10 @@
     "directories": { "output": "dist" },
     "win": { "target": "nsis" },
     "nsis": { "artifactName": "diana-${version}-windows-${arch}-setup.${ext}" },
-    "mac": { "target": "dmg", "category": "public.app-category.education", "identity": "-" },
+    "mac": { "target": "dmg", "category": "public.app-category.education", "identity": "-", "hardenedRuntime": false },
     "dmg": { "artifactName": "diana-${version}-macos-${arch}.${ext}" },
     "linux": { "target": ["AppImage", "deb"], "category": "Education", "maintainer": "kratagit" },
-    "appImage": { "artifactName": "diana-${version}-linux-${arch}.${ext}" },
-    "deb": { "artifactName": "diana-${version}-linux-${arch}.${ext}" }
+    "appImage": { "artifactName": "diana-${version}-linux-x64.${ext}" },
+    "deb": { "artifactName": "diana-${version}-linux-x64.${ext}" }
   }
 }
