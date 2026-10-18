@@ -72,6 +72,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Paczka (electron-builder)
+        shell: bash   # PowerShell na Windows źle przekazuje argument -c.extraMetadata.version
         run: npx electron-builder ${{ matrix.args }} --publish never -c.extraMetadata.version=${{ needs.wersja.outputs.version }}
       - uses: actions/upload-artifact@v4
         with:
