@@ -1,4 +1,3 @@
-# Budowanie i testy: pip install -r requirements-dev.txt
+# Budowanie .exe: pip install -r requirements-dev.txt (testy: npm test)
 -r requirements.txt
 pyinstaller==6.22.3
-pytest==9.1.1

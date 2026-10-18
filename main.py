@@ -11,7 +11,6 @@ sys.excepthook = global_exception_handler
 
 import eel
 import os
-from engine import DAlgorithmEngine
 
 # 1. W .exe (PyInstaller) pliki aplikacji są rozpakowywane do sys._MEIPASS
 if hasattr(sys, '_MEIPASS'):
@@ -21,14 +20,8 @@ else:
     
 web_folder = os.path.join(base_path, 'web')
 
-# 2. Mówimy Eelowi, gdzie znajduje się folder z naszym interfejsem
+# 2. Mówimy Eelowi, gdzie znajduje się folder z naszym interfejsem (silnik D-algorytmu działa w oknie: web/engine.js)
 eel.init(web_folder)
-
-@eel.expose
-def run_d_algorithm(components, target_node, fault_type, user_choices):
-    engine = DAlgorithmEngine(components, target_node, fault_type, user_choices)
-    result = engine.run()
-    return result
 
 import eel.chrome
 import eel.edge
