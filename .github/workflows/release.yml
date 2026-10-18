@@ -1,6 +1,6 @@
 name: Release
 
-# Merge PR na main z etykietą patch / minor / major -> testy, build .exe i GitHub Release.
+# Merge PR na main z etykietą patch / minor / major -> testy, paczki na Windows, macOS i Linux oraz GitHub Release.
 # Wersja nie jest zapisana w repozytorium: to ostatni tag vX.Y.Z podbity zgodnie z etykietą
 # (pierwsze wydanie: v1.0.0). PR bez etykiety nie tworzy wydania.
 on:
@@ -16,13 +16,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
+  wersja:
     if: >-
       github.event.pull_request.merged &&
       (contains(github.event.pull_request.labels.*.name, 'patch') ||
        contains(github.event.pull_request.labels.*.name, 'minor') ||
        contains(github.event.pull_request.labels.*.name, 'major'))
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -31,12 +33,10 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-
+      - name: Testy
+        run: npm test
       - name: Wylicz wersję
         id: ver
-        shell: bash
         env:
           LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
         run: |
@@ -50,19 +50,50 @@ jobs:
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "Wersja: $v ($bump, poprzednia: ${last:-brak})"
 
-      - name: Testy
-        run: npm test
+  paczki:
+    needs: wersja
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest   # instalator .exe
+            args: --win --x64
+          - os: macos-latest     # .dmg dla Maców z Intelem i z Apple Silicon
+            args: --mac --universal
+          - os: ubuntu-latest    # AppImage i .deb
+            args: --linux --x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Paczka (electron-builder)
+        run: npx electron-builder ${{ matrix.args }} --publish never -c.extraMetadata.version=${{ needs.wersja.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paczka-${{ matrix.os }}
+          path: |
+            dist/diana-*-setup.exe
+            dist/diana-*.dmg
+            dist/diana-*.AppImage
+            dist/diana-*.deb
+          if-no-files-found: error
 
-      - name: Build .exe (Electron)
-        run: npx electron-builder --win portable --publish never -c.extraMetadata.version=${{ steps.ver.outputs.version }}
-
+  wydanie:
+    needs: [wersja, paczki]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: paczki
+          merge-multiple: true
       - name: Utwórz GitHub Release
-        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          V: ${{ steps.ver.outputs.version }}
+          V: ${{ needs.wersja.outputs.version }}
           SHA: ${{ github.event.pull_request.merge_commit_sha }}
-        run: |
-          asset="dist/diana-$V-windows-x64.exe"
-          mv dist/DIANA.exe "$asset"
-          gh release create "v$V" "$asset" --target "$SHA" --title "DIANA v$V" --generate-notes
+        run: gh release create "v$V" paczki/* --repo "$GITHUB_REPOSITORY" --target "$SHA" --title "DIANA v$V" --generate-notes
