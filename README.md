@@ -4,7 +4,22 @@
 
 Cała aplikacja – edytor schematów i silnik D-algorytmu – jest napisana w czystym JavaScripcie (Vanilla JS / SVG) i działa jako aplikacja okienkowa [Electron](https://www.electronjs.org/), także offline.
 
-Gotowy plik `.exe` dla Windows: [najnowsze wydanie](https://github.com/kratagit/diana/releases/latest).
+## 📥 Instalacja
+
+Pobierz plik dla swojego systemu z [najnowszego wydania](https://github.com/kratagit/diana/releases/latest):
+
+| System | Plik | Jak zainstalować |
+|---|---|---|
+| **Windows** (10/11, 64-bit) | `diana-<wersja>-windows-x64-setup.exe` | Uruchom instalator – DIANA zainstaluje się bez uprawnień administratora i pojawi się w menu Start i na pulpicie. Odinstalowanie: Ustawienia → Aplikacje. |
+| **macOS** (Intel i Apple Silicon) | `diana-<wersja>-macos-universal.dmg` | Otwórz plik `.dmg` i przeciągnij DIANA do folderu Aplikacje. |
+| **Linux** (64-bit) | `diana-<wersja>-linux-x64.AppImage` | Nadaj prawo wykonania (`chmod +x diana-*.AppImage`) i uruchom. |
+| **Linux** (Ubuntu, Debian) | `diana-<wersja>-linux-x64.deb` | `sudo apt install ./diana-<wersja>-linux-x64.deb` |
+
+Aplikacja nie jest podpisana certyfikatem, dlatego system może ją zablokować przy pierwszym uruchomieniu:
+
+* **Windows** – w okienku „System Windows ochronił ten komputer” kliknij **Więcej informacji → Uruchom mimo to**.
+* **macOS** – przy pierwszym uruchomieniu pojawi się komunikat, że nie można sprawdzić aplikacji. Otwórz **Ustawienia systemowe → Prywatność i ochrona** i kliknij **Otwórz mimo to** (wystarczy raz).
+* **Linux (AppImage)** – jeśli plik się nie uruchamia, doinstaluj bibliotekę FUSE (np. `sudo apt install libfuse2`) albo użyj pakietu `.deb`.
 
 ---
 
@@ -59,14 +74,14 @@ Testy działają na wbudowanym module testów Node.js (`node --test`, pliki `tes
 
 Układy do ręcznego sprawdzania w aplikacji (Plik → Wczytaj układ) wraz z kluczem odpowiedzi są w `tests/fixtures/do-sprawdzenia/`. Na GitHubie testy uruchamia workflow `CI` przy każdym pushu i pull requeście.
 
-### Budowanie `.exe`
+### Budowanie paczek
 ```bash
-npm run dist   # przykłady -> dist/DIANA.exe
+npm run dist   # przykłady -> paczka dla bieżącego systemu w dist/
 ```
-Skrypt regeneruje `web/examples.js` i buduje electron-builderem jeden plik `.exe` dla Windows, który działa bez instalacji (cel `portable`). Budowanie trwa ok. 2 minut; testy uruchamia się osobno (`npm test`).
+Skrypt regeneruje `web/examples.js` i buduje electron-builderem paczkę dla systemu, na którym jest uruchomiony: na Windows instalator `dist/diana-0.0.0-windows-x64-setup.exe` (ok. 30 s), na macOS `.dmg`, na Linuksie `AppImage` i `.deb`. Testy uruchamia się osobno (`npm test`).
 
 ### Wydania (GitHub Releases)
-Wydanie powstaje po merge'u PR na `main` oznaczonego etykietą `patch`, `minor` lub `major`. Workflow `Release` uruchamia testy, buduje `.exe` na Windows (Electron) i publikuje release z plikiem `diana-<wersja>-windows-x64.exe`. Wersja jest wyliczana automatycznie z ostatniego tagu `vX.Y.Z` (pierwsze wydanie: `v1.0.0`) i nie jest zapisana w kodzie:
+Wydanie powstaje po merge'u PR na `main` oznaczonego etykietą `patch`, `minor` lub `major`. Workflow `Release` uruchamia testy, buduje paczki na trzech maszynach GitHuba (Windows, macOS, Linux) i publikuje release z plikami z tabeli w sekcji „Instalacja”. Wersja jest wyliczana automatycznie z ostatniego tagu `vX.Y.Z` (pierwsze wydanie: `v1.0.0`) i nie jest zapisana w kodzie:
 
 | Etykieta | Kiedy | Przykład |
 |---|---|---|
