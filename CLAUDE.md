@@ -14,22 +14,21 @@ Język projektu: **polski** (UI, komunikaty silnika, komentarze w kodzie, README
 
 ## Stos i uruchamianie
 
-- Cała aplikacja w czystym JavaScripcie: frontend HTML/CSS/JS + SVG i silnik `web/engine.js`, bez frameworków, bundlera i pakietów npm. Okno otwiera na razie Python 3.14 + [Eel](https://github.com/python-eel/Eel) (`main.py` tylko serwuje `web/`). **Trwa przejście na Electron** (plan: 1. silnik i testy w JS – zrobione, 2. Electron zamiast Pythona/Eel/PyInstallera, 3. wydania na Windows/macOS/Linux).
-- Node.js 24 – testy i skrypty (`package.json`: `npm test`, `npm run przyklady`). Python: `.venv` w katalogu projektu; `requirements.txt` – runtime (Eel), `requirements-dev.txt` – dodatkowo PyInstaller. Python wołać jako `.venv/Scripts/python`.
-- Uruchomienie: `python main.py` – otwiera okno Chrome / Edge (fallback: domyślna przeglądarka), port losowy (`port=0`).
-- Testy: `npm test` (`node --test tests/*.test.js`, ~600 testów, ok. 5 s).
-- Build: `python build.py` → `node buduj_przyklady.js`, testy, PyInstaller (`--onefile`, ok. 1 min) → `dist/DIANA.exe`.
-- CI (`.github/workflows/`): `ci.yml` – `npm test` przy każdym pushu na `main` i pull requeście; `release.yml` – merge PR na `main` z etykietą `patch`/`minor`/`major` → testy, build na `windows-latest` i GitHub Release `vX.Y.Z` z plikiem `diana-X.Y.Z-windows-x64.exe`. Wersja istnieje **tylko jako tag** (ostatni tag podbity wg etykiety, start `v1.0.0`) – w kodzie nie ma pliku z wersją; nie tworzyć tagów ręcznie. PR bez etykiety nie tworzy wydania.
-- Podgląd w przeglądarce bez Pythona: konfiguracja `web-static` w `.claude/launch.json` (serwer statyczny na `web/`) – działa cała aplikacja razem z silnikiem; brakuje tylko `/eel.js` (404, bez znaczenia).
+- Cała aplikacja w czystym JavaScripcie: frontend HTML/CSS/JS + SVG i silnik `web/engine.js`, bez frameworków i bundlera. Okno to [Electron](https://www.electronjs.org/) (`main.js` otwiera `web/index.html`; silnik działa w oknie, bez IPC i serwera). Plan przejścia z Pythona: 1. silnik i testy w JS, 2. Electron – zrobione; 3. wydania na Windows (x64 + ARM64), macOS i Linux.
+- Node.js 24. Zależności tylko deweloperskie (`electron`, `electron-builder`, dokładne wersje w `package.json` + `package-lock.json`): `npm install` (pierwsze uruchomienie Electrona pobiera jego binaria).
+- Uruchomienie: `npm start` (narzędzia deweloperskie dostępne; w wydaniu wyłączone razem z domyślnym menu – `app.isPackaged`).
+- Testy: `npm test` (`node --test tests/*.test.js`, ~600 testów, ok. 5 s) – bez Electrona, w samym Node.js.
+- Build: `npm run dist` → `node buduj_przyklady.js` + electron-builder, cel `portable` (jeden plik bez instalacji, ok. 100 MB, ok. 2 min) → `dist/DIANA.exe`. Konfiguracja w `package.json` (`build`): do aplikacji trafiają tylko `main.js` i `web/`. Wersja lokalnie 0.0.0, w wydaniu podawana przez `-c.extraMetadata.version`.
+- CI (`.github/workflows/`): `ci.yml` – `npm test` przy każdym pushu na `main` i pull requeście; `release.yml` – merge PR na `main` z etykietą `patch`/`minor`/`major` → `npm ci`, testy, electron-builder na `windows-latest` i GitHub Release `vX.Y.Z` z plikiem `diana-X.Y.Z-windows-x64.exe`. Wersja istnieje **tylko jako tag** (ostatni tag podbity wg etykiety, start `v1.0.0`) – w kodzie nie ma pliku z wersją; nie tworzyć tagów ręcznie. PR bez etykiety nie tworzy wydania.
+- Podgląd w przeglądarce bez Electrona: konfiguracja `web-static` w `.claude/launch.json` (`npx http-server` na `web/`) – działa cała aplikacja razem z silnikiem.
 
 ## Struktura
 
 | Plik | Rola |
 |---|---|
-| `main.py` | Punkt wejścia: globalny `excepthook` (MessageBox Windows przez `ctypes` – działa tylko na Windows), `eel.init('web')`, wybór przeglądarki. Nic nie liczy. |
-| `build.py` | Budowanie `.exe` (PyInstaller). |
+| `main.js` | Proces główny Electrona: jedno okno z `web/index.html`, w wydaniu bez menu i narzędzi deweloperskich. |
 | `web/engine.js` | Klasa `DAlgorithmEngine` – cała logika algorytmu. Zwykły skrypt bez zależności: w oknie klasa globalna, w Node.js `module.exports`. |
-| `web/index.html` | Cały frontend w jednym pliku (CSS + JS inline, ~940 linii): edytor schematów, zoom/pan, kable z załamaniami, tabela wyników, panel alternatywnych decyzji, autosave do `localStorage` (`d_algo_save`). Woła `new DAlgorithmEngine(...).run()` w `runAlgo`. |
+| `web/index.html` | Cały frontend w jednym pliku (CSS + JS inline, ~950 linii): edytor schematów, zoom/pan, kable z załamaniami, tabela wyników, panel alternatywnych decyzji, autosave do `localStorage` (`d_algo_save`). Woła `new DAlgorithmEngine(...).run()` w `runAlgo`. Bez `prompt()` (Electron go nie obsługuje) – nazwę zmienia się na schemacie (`ctxRename`). |
 | `web/examples.js` | **Generowany** – `const EXAMPLES = {...}`. Nie edytować ręcznie. |
 | `buduj_przyklady.js` | Generuje `web/examples.js` ze wszystkich plików `[NUMER].json` w katalogu głównym. Przyciski w menu „Plik” tworzą się w JS z kluczy `EXAMPLES`. Test pilnuje, by `examples.js` był aktualny. |
 | `tests/` | `node --test` – opis niżej w „Testy”. |
@@ -72,7 +71,7 @@ Ważne szczegóły:
 - `tests/helpers.js` – uruchamianie silnika, `explore` (przejście całego drzewa decyzji, każdy przebieg raz; przekroczenie limitu przebiegów to błąd testu, a nie ciche pominięcie), `checkRun`/`checkFault` (zasady poprawnej tabeli z kategoriami naruszeń: `struktura`, `test`, `sprzecznosc`, `kompletnosc`, `opcje`).
 - `examples.test.js` – przykłady aplikacji, układy z zajęć (`tests/fixtures/tester/*.json`, z `konwertuj_gat.js`) i układ ze str. 41 w wersji 2-wejściowej; pilnuje też, by klucz odpowiedzi w `tests/fixtures/do-sprawdzenia/README.md` zgadzał się z wyrocznią. `materials.test.js` – tabele 2–5 i przykłady z `Materiały.pdf` (`tests/fixtures/materialy/uklad-g1-g9.json` – układ ze str. 33/41 z 3-wejściowym OR; silnik musi znaleźć test ze str. 41, bez porównywania tabeli wiersz w wiersz). `random.test.js` – 2×150 losowych układów (`random_circuits.js`, generator z ziarnem mulberry32, 2–5 wejść, 3–10 bramek, rozgałęzienie zawsze przez jeden węzeł). `engine.test.js` – scenariusze i minimalne układy błędów wersji 1.1.0 (`tests/fixtures/do-sprawdzenia/blad-*.json`). `gates.test.js` – funkcje bramek. `przyklady.test.js` – generator `examples.js`.
 - `tests/fixtures/do-sprawdzenia/` – układy do ręcznego sprawdzania w aplikacji (Plik → Wczytaj układ) z kluczem odpowiedzi w `README.md` (wszystkie testy każdej usterki wg wyroczni, zapis wzorcami z x).
-- Silnik JS jest wierną kopią dawnego `engine.py` – przed usunięciem Pythona porównano wyniki obu silników dla każdej ścieżki decyzji na wszystkich układach z repozytorium i 2000 losowych (ok. 200 tys. przebiegów, 0 różnic). Błędy wersji 1.1.0 (fałszywe testy i sprzeczności przy rekonwergencji, propagacja jedną ścieżką, wspólne źródło wejść bramki, podsumowanie po sprzeczności) są naprawione.
+- Silnik JS jest wierną kopią dawnego silnika w Pythonie (`engine.py`, wersje do 1.3.0) – przed jego usunięciem porównano wyniki obu silników dla każdej ścieżki decyzji na wszystkich układach z repozytorium i 2000 losowych (ok. 200 tys. przebiegów, 0 różnic). Błędy wersji 1.1.0 (fałszywe testy i sprzeczności przy rekonwergencji, propagacja jedną ścieżką, wspólne źródło wejść bramki, podsumowanie po sprzeczności) są naprawione.
 
 ## Materiały źródłowe (poza repozytorium)
 

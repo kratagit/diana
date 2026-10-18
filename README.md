@@ -2,7 +2,7 @@
 
 **DIANA** (*DIagnostyka i ANAliza układów cyfrowych*) to narzędzie edukacyjno-inżynierskie pozwalające na projektowanie układów logicznych i automatyczne generowanie wektorów testowych (ATPG) dla pojedynczych usterek typu *stuck-at* (s-a-0, s-a-1). Projekt implementuje klasyczny D-Algorytm (pobudzenie, propagacja, badanie zgodności) z wyborem alternatywnych decyzji przez użytkownika i tabelą krok po kroku.
 
-Cała aplikacja – edytor schematów i silnik D-algorytmu – jest napisana w czystym JavaScripcie (Vanilla JS / SVG). Okno aplikacji otwiera na razie mały program w Pythonie (`Eel`); docelowo zastąpi go Electron.
+Cała aplikacja – edytor schematów i silnik D-algorytmu – jest napisana w czystym JavaScripcie (Vanilla JS / SVG) i działa jako aplikacja okienkowa [Electron](https://www.electronjs.org/), także offline.
 
 Gotowy plik `.exe` dla Windows: [najnowsze wydanie](https://github.com/kratagit/diana/releases/latest).
 
@@ -10,7 +10,7 @@ Gotowy plik `.exe` dla Windows: [najnowsze wydanie](https://github.com/kratagit/
 
 ## 🏗️ Architektura Rozwiązania
 
-Interfejs i silnik działają w jednym oknie przeglądarki Chromium (Chrome / Edge) bez serwera obliczeniowego. Python z biblioteką `Eel` (`main.py`) tylko serwuje folder `web/` i otwiera okno.
+Interfejs i silnik działają w jednym oknie Electrona (`main.js` otwiera `web/index.html`), bez serwera obliczeniowego i bez komunikacji między procesami.
 
 ### 1. Warstwa Prezentacji (Frontend - Web UI)
 Cały interfejs działa w oparciu o silnik przeglądarki, używając natywnego HTML5, Vanilla JavaScript oraz manipulacji DOM i SVG. Zrezygnowano z ciężkich frameworków (np. React) na rzecz surowej wydajności w zarządzaniu setkami wtyczek i kabli.
@@ -36,17 +36,14 @@ Jądro aplikacji stanowi klasa `DAlgorithmEngine` (zwykły skrypt JS bez zależn
 ## 🚀 Uruchamianie, testy i budowanie
 
 ### Środowisko
-- [Node.js](https://nodejs.org/) 24 – testy i generowanie przykładów (bez instalowania pakietów).
-- Python 3.14 – tylko otwieranie okna (`Eel`) i budowanie `.exe`:
+[Node.js](https://nodejs.org/) 24, potem w katalogu projektu:
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements-dev.txt   # samo uruchamianie: requirements.txt
+npm install
 ```
 
 ### Uruchomienie ze źródeł
 ```bash
-python main.py
+npm start
 ```
 
 ### Testy
@@ -62,15 +59,14 @@ Testy działają na wbudowanym module testów Node.js (`node --test`, pliki `tes
 
 Układy do ręcznego sprawdzania w aplikacji (Plik → Wczytaj układ) wraz z kluczem odpowiedzi są w `tests/fixtures/do-sprawdzenia/`. Na GitHubie testy uruchamia workflow `CI` przy każdym pushu i pull requeście.
 
-### Budowanie `.exe` (PyInstaller)
+### Budowanie `.exe`
 ```bash
-python build.py               # przykłady -> testy -> dist/DIANA.exe
-python build.py --skip-tests  # bez testów
+npm run dist   # przykłady -> dist/DIANA.exe
 ```
-Skrypt regeneruje `web/examples.js`, uruchamia testy i pakuje `main.py` PyInstallerem do jednego pliku bez okna konsoli (z wbudowanym folderem `web/`; pliki Eel dołącza hook PyInstallera). Budowanie trwa ok. minuty.
+Skrypt regeneruje `web/examples.js` i buduje electron-builderem jeden plik `.exe` dla Windows, który działa bez instalacji (cel `portable`). Budowanie trwa ok. 2 minut; testy uruchamia się osobno (`npm test`).
 
 ### Wydania (GitHub Releases)
-Wydanie powstaje po merge'u PR na `main` oznaczonego etykietą `patch`, `minor` lub `major`. Workflow `Release` uruchamia testy, buduje `.exe` na Windows i publikuje release z plikiem `diana-<wersja>-windows-x64.exe`. Wersja jest wyliczana automatycznie z ostatniego tagu `vX.Y.Z` (pierwsze wydanie: `v1.0.0`) i nie jest zapisana w kodzie:
+Wydanie powstaje po merge'u PR na `main` oznaczonego etykietą `patch`, `minor` lub `major`. Workflow `Release` uruchamia testy, buduje `.exe` na Windows (Electron) i publikuje release z plikiem `diana-<wersja>-windows-x64.exe`. Wersja jest wyliczana automatycznie z ostatniego tagu `vX.Y.Z` (pierwsze wydanie: `v1.0.0`) i nie jest zapisana w kodzie:
 
 | Etykieta | Kiedy | Przykład |
 |---|---|---|
@@ -83,6 +79,6 @@ PR bez etykiety nie tworzy wydania.
 ### Dodawanie wbudowanych przykładów (JSON)
 1. Zapisz schemat za pomocą „Zapisz układ”.
 2. Umieść plik jako `[NUMER].json` (np. `3.json`) w głównym katalogu projektu.
-3. Uruchom `npm run przyklady` (robi to też `build.py`) – wszystkie pliki `[NUMER].json` zostaną zaszyte w `web/examples.js`, a przyciski w menu „Plik” wygenerują się same.
+3. Uruchom `npm run przyklady` (robi to też `npm run dist`) – wszystkie pliki `[NUMER].json` zostaną zaszyte w `web/examples.js`, a przyciski w menu „Plik” wygenerują się same.
 
 ---

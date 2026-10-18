@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "web-static",
-      "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "web"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server@14.1.1", "web", "-p", "8765", "-c-1", "-s"],
       "port": 8765
     }
   ]
