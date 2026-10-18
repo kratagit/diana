@@ -1,0 +1,9 @@
+{
+  "name": "diana",
+  "private": true,
+  "description": "DIANA – diagnostyka i analiza układów cyfrowych (D-algorytm)",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "przyklady": "node buduj_przyklady.js"
+  }
+}

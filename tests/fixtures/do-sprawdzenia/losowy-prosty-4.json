@@ -1,5 +1,5 @@
 {
-  "opis": "random_circuit(seed=32, reconvergent=False) z tests/random_circuits.py",
+  "opis": "Losowy układ bez rekonwergencji.",
   "components": {
     "X1": {
       "id": "X1",

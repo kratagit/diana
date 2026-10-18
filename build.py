@@ -9,8 +9,6 @@ import shutil
 import subprocess
 import sys
 
-import buduj_przyklady
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BUILD_DIR = os.path.join(BASE_DIR, 'build')
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
@@ -24,13 +22,13 @@ def run(cmd):
 
 def build(skip_tests=False):
     print("[1/3] Generowanie web/examples.js")
-    buduj_przyklady.buduj()
+    run(['node', 'buduj_przyklady.js'])
 
     if skip_tests:
         print("[2/3] Testy pominięte (--skip-tests)")
     else:
         print("[2/3] Testy")
-        run([sys.executable, '-m', 'pytest', '-q'])
+        run(['node', '--test', 'tests/*.test.js'])
 
     print("[3/3] Budowanie .exe (PyInstaller)")
     run([

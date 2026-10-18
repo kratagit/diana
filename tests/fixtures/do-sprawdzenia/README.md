@@ -1,6 +1,6 @@
 # Układy do ręcznego sprawdzania
 
-Każdy plik wczytasz w aplikacji: **Plik → Wczytaj układ**. Wybierz bramkę i typ usterki, kliknij **Oblicz Test**, a wynik porównaj z kluczem poniżej. Klucz wyznaczyła wyrocznia testów (`tests/oracle.py`) – sprawdzenie wszystkich kombinacji wejść w układzie zdatnym i z usterką.
+Każdy plik wczytasz w aplikacji: **Plik → Wczytaj układ**. Wybierz bramkę i typ usterki, kliknij **Oblicz Test**, a wynik porównaj z kluczem poniżej. Klucz wyznaczyła wyrocznia testów (`tests/oracle.js`) – sprawdzenie wszystkich kombinacji wejść w układzie zdatnym i z usterką.
 
 Jak czytać klucz: test z aplikacji jest poprawny, jeśli **każde** jego uzupełnienie (każde `x` zamienione na 0 i na 1) jest na liście testów danej usterki. Opisy „teraz” dotyczą naprawionego silnika (po wersji 1.1.0).
 

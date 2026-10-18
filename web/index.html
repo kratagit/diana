@@ -5,6 +5,7 @@
     <title>DIANA – diagnostyka i analiza układów cyfrowych</title>
     <script type="text/javascript" src="/eel.js"></script>
     <script type="text/javascript" src="examples.js"></script>
+    <script type="text/javascript" src="engine.js"></script>
     <style>
         :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #3498db; --danger: #e74c3c; --success: #2ecc71; --purple: #9b59b6; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -863,18 +864,18 @@
         }
     }
 
-    // Przyciski przykładów generowane z web/examples.js (buduj_przyklady.py)
+    // Przyciski przykładów generowane z web/examples.js (buduj_przyklady.js)
     document.getElementById('examples-menu').innerHTML = Object.keys(EXAMPLES)
         .map(n => `<div class="dropdown-item" onclick="loadExample(${n})">Załaduj Przykład ${n}</div>`).join('');
 
-    // --- KOMUNIKACJA Z PYTHONEM (EEL) ---
-    async function runAlgo(fresh = false) {
+    // --- OBLICZENIA (silnik D-algorytmu z engine.js) ---
+    function runAlgo(fresh = false) {
         if(fresh) userChoices = {};
         let tgt = document.getElementById('fault-target').value;
         let typ = document.getElementById('fault-type').value;
         if(!tgt) return;
         
-        lastResult = await eel.run_d_algorithm(comps, tgt, typ, userChoices)();
+        lastResult = new DAlgorithmEngine(comps, tgt, typ, userChoices).run();
         renderTable();
         autoSave();
     }
