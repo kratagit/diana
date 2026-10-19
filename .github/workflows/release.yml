@@ -74,7 +74,7 @@ jobs:
       - name: Paczka (electron-builder)
         shell: bash   # PowerShell na Windows źle przekazuje argument -c.extraMetadata.version
         run: npx electron-builder ${{ matrix.args }} --publish never -c.extraMetadata.version=${{ needs.wersja.outputs.version }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: paczka-${{ matrix.os }}
           path: |
@@ -88,7 +88,7 @@ jobs:
     needs: [wersja, paczki]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: paczki
           merge-multiple: true
